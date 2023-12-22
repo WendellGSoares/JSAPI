@@ -7,19 +7,19 @@ const searchURL = BASE_URL + '/search/movie?'+API_KEY;
 const genres = [
     {
       "id": 28,
-      "name": "Action"
+      "name": "Ação"
     },
     {
       "id": 12,
-      "name": "Adventure"
+      "name": "Aventura"
     },
     {
       "id": 16,
-      "name": "Animation"
+      "name": "Animação"
     },
     {
       "id": 35,
-      "name": "Comedy"
+      "name": "Comédia"
     },
     {
       "id": 80,
@@ -27,7 +27,7 @@ const genres = [
     },
     {
       "id": 99,
-      "name": "Documentary"
+      "name": "Documentátirio"
     },
     {
       "id": 18,
@@ -35,15 +35,15 @@ const genres = [
     },
     {
       "id": 10751,
-      "name": "Family"
+      "name": "Familia"
     },
     {
       "id": 14,
-      "name": "Fantasy"
+      "name": "Fantasia"
     },
     {
       "id": 36,
-      "name": "History"
+      "name": "Hitória"
     },
     {
       "id": 27,
@@ -51,11 +51,11 @@ const genres = [
     },
     {
       "id": 10402,
-      "name": "Music"
+      "name": "Musical"
     },
     {
       "id": 9648,
-      "name": "Mystery"
+      "name": "Mistério"
     },
     {
       "id": 10749,
@@ -63,23 +63,23 @@ const genres = [
     },
     {
       "id": 878,
-      "name": "Science Fiction"
+      "name": "Ficção Científica"
     },
     {
       "id": 10770,
-      "name": "TV Movie"
+      "name": "Programas de TV"
     },
     {
       "id": 53,
-      "name": "Thriller"
+      "name": "Suspense"
     },
     {
       "id": 10752,
-      "name": "War"
+      "name": "Guerra"
     },
     {
       "id": 37,
-      "name": "Western"
+      "name": "Faroeste "
     }
   ]
 
@@ -87,6 +87,16 @@ const main = document.getElementById('main');
 const form =  document.getElementById('form');
 const search = document.getElementById('pesquisa');
 const tagsEl = document.getElementById('tags');
+
+const prev = document.getElementById('prev')
+const next = document.getElementById('next')
+const current = document.getElementById('current')
+
+var currentPage = 1;
+var nextPage = 2;
+var prevPage = 3;
+var lastUrl = '';
+var totalPages = 100;
 
 
 var selectedGenre = []
@@ -138,35 +148,56 @@ function highlightSelection() {
 getMovies(API_URL);
 
 function getMovies(url) {
+    lastUrl = url;
+        fetch(url).then(res => res.json()).then(data =>{
+            console.log(data.results)
+            if(data.results.length !==0){
+                showMovies(data.results);
+                currentPage = data.page;
+                nextPage = currentPage + 1;
+                prevPage = currentPage - 1;
+                totalPages = data.total_pages;
+                current.innerText = currentPage;
 
-    fetch(url).then(res => res.json()).then(data =>{
-        console.log(data.results)
-        if(data.results.length !==0){
-            showMovies(data.results);
-        } else {
-            main.innerHTML= `<h1 class="resultado">Nenhum filme encontrado</h1>`
-        }
+                if(currentPage <= 1){
+                    prev.classList.add('disabled');
+                    next.classList.remove('disabled')
+                }else if(currentPage>= totalPages){
+                    prev.classList.remove('disabled');
+                    next.classList.add('disabled')
+                }else{
+                    prev.classList.remove('disabled');
+                    next.classList.remove('disabled')
+                }
 
-    })
+            } else {
+                main.innerHTML= `<h1 class="resultado">Nenhum filme encontrado</h1>`
+            }
+
+        })
 }
 
 function showMovies(data){
     main.innerHTML = '';
     data.forEach(movie => {
-        const{title, poster_path, vote_average, overview} = movie;
+        const{title, poster_path, vote_average, overview, vote_count, release_date} = movie;
         const moviEl = document.createElement('div');
         moviEl.classList.add('filme');
         moviEl.innerHTML = `
         
-        <img src="${IMG_URL+poster_path}" alt="${title}">
+        <img src="${poster_path? IMG_URL+poster_path: "https://www.friking.es/cdn/shop/files/2661.jpg?v=1695323571&width=823"}" alt="${title}">
 
         <div class="filme_info">
-            <h2> ${title} </h2>
+            <h2> ${title}votos</h2>
             <span class="${getColor(vote_average)}">${vote_average}</span>
+        </div>
+            
+        <div class="filme_info2">
+            <p> ${release_date} </p>
         </div>
 
         <div class="descricao">
-            <h3>Descricao</h3>
+            <h3>Descricao - ${vote_count} Votos</h3> 
             ${overview}
         </div>
         `
@@ -196,3 +227,32 @@ form.addEventListener('submit', (e) => {
     }
 
 })
+
+prev.addEventListener('click', () => {
+    if(prevPage > 0){
+      pageCall(prevPage);
+    }
+  })
+
+next.addEventListener('click', () => {
+    if(nextPage <= totalPages){
+      pageCall(nextPage);
+    }
+  })
+  
+  function pageCall(page){
+    let urlSplit = lastUrl.split('?');
+    let queryParams = urlSplit[1].split('&');
+    let key = queryParams[queryParams.length -1].split('=');
+    if(key[0] != 'page'){
+      let url = lastUrl + '&page='+page
+      getMovies(url);
+    }else{
+      key[1] = page.toString();
+      let a = key.join('=');
+      queryParams[queryParams.length -1] = a;
+      let b = queryParams.join('&');
+      let url = urlSplit[0] +'?'+ b
+      getMovies(url);
+    }
+}
