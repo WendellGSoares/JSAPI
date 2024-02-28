@@ -1,4 +1,4 @@
-const API_KEY = 'api_key=f74ebae20cbc9952c093f044fa1a090c'
+const API_KEY = 'api_key='
 const BASE_URL = 'https://api.themoviedb.org/3';
 const API_URL = BASE_URL + '/discover/movie?language=pt-BRsort_by=popularity.desc&'+API_KEY;
 const IMG_URL = 'https://image.tmdb.org/t/p/w500';
